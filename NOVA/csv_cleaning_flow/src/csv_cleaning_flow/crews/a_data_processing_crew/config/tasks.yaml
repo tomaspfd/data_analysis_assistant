@@ -1,0 +1,137 @@
+data_research_task:
+  description: |
+    You are provided with:
+      - column names: {columns}
+      - a sample of rows: {sample_rows}
+    
+    Your job:
+      1. Based **strictly** on the above columns and sample rows, perform targeted 
+      online research (using SerperDevTool) to:
+          - Explain what each column likely represents (only if the meaning is obvious 
+          from name/data or found online; otherwise state "unknown").
+          - Research the context, domain, and possible use cases for this dataset, 
+          using clues from the data.
+          - Identify any recent developments or important external information related 
+          to the dataset topic or the columns.
+      2. Prepare a clear, concise report that includes:
+          - The full list of columns (verbatim as received) with your researched or 
+          inferred meanings ("unknown" if not sure)
+          - A summary of your online research, clearly tied to the columns or the 
+          dataset's domain
+          - Suggestions for next analysis steps for a downstream agent
+
+    **Rules:**
+      - Never invent, change, or guess columns or values not present in the input.
+      - Never summarize data beyond what is present in the sample rows.
+      - Be explicit about uncertainty ("unknown") if a column's purpose is unclear.
+      - Base your research and reporting strictly on the given data.
+  expected_output: |
+    - The provided columns, each with a meaning or "unknown"
+    - Research summaries linked to the dataset/columns
+    - No invented, assumed, or hallucinated content
+    - Suggestions for the next agent
+    - Format your entire report as markdown, with headings, bullet points, and code 
+    blocks as appropriate.
+  agent: data_research_agent
+
+
+
+
+
+data_profiling_task:
+  description: >
+    Your goal is to perform a **basic profiling and documentation** of the dataset,
+    and to integrate the research findings produced by the `data_research_task` into
+    your final report. This report should serve as a single comprehensive reference 
+    for downstream agents, combining both structural profiling and contextual research.
+
+    **Inputs:**
+      - As "context", you are provided the overview report describing the dataset, which also includes research findings
+      - The dataset: column names ({columns}) and sample rows ({sample_rows})
+      - The path to the full CSV file: {csv_file_path}
+
+    **Steps:**
+      0. Load the CSV file at {csv_file_path} into a pandas DataFrame called df.
+      1. Unless otherwise specified, analyze all columns. Use the overview report to prioritize if needed.
+      2. For each column:
+          - Show Python-reported data type; flag mismatches (e.g., numeric stored as string).
+          - Count and % of missing/null values.
+          - Flag columns with ALL missing or only one unique value (constant).
+          - Flag columns with high cardinality (e.g., >90% unique).
+          - Provide summary statistics:
+              - Numeric: mean, std, min, max, median, count
+              - Categorical: unique values, top 10 value counts, and % of most common.
+          - Note encoding patterns and flag inconsistent representations (e.g., "yes"/"Yes"/"Y").
+          - Flag type mismatches or suspicious values
+          - For each column, add an "Actionable Flag" (with brief justification): "Needs type 
+          conversion", "Needs imputation", "High cardinality", etc.
+      3. Document each column’s meaning based on overview/sample data.
+      4. Integrate the research findings (from `data_research_task`) into the report:
+          - The dataset’s broader context, domain, and 
+            possible use cases.
+          - Recent developments or external information about the 
+            dataset topic or its columns.
+          - Ensure these findings are clearly separated into a dedicated 
+            **“Online Research”** section.
+      5. Output clean markdown, including:
+         - (Optional) Table of Contents
+         - Dataset overview: shape, dtypes
+         - One-sentence explanation of each column from the "overview report" describing the dataset that was provided to you
+         - Per-column documentation (as above)
+         - Data types and mismatches
+         - Missingness overview
+         - Initial stats (mean, std, min, 25%, 50%, 75%, max, count)
+         - Categorical summaries
+         - Non-informative column flags
+         - Example problematic values
+         - Actionable flags per column
+         - Short notes for downstream diagnostics
+         - **Online Research** (incorporating the `data_research_task` output)
+         - **Explicit disclaimer: No cleaning was performed—this is raw data documentation.**
+
+    **Rules:**
+      - Do not redo or expand the research yourself; simply incorporate the provided 
+        `data_research_task` output into your report.
+      - No outlier detection or category consolidation.
+      - No cleaning or value changes.
+      - No assumptions—only code/evidence.
+      - Use Python code (via CodeInterpreterTool) for all stats.
+      - Format all output as clean markdown.
+      - **When using the CodeInterpreterTool, always output a Python variable named `result` 
+        containing the final value or DataFrame; do not use/rely on only print statements.**
+
+  expected_output: >
+    A reproducible, **markdown-ready** profiling report that includes:
+      - Title of the report: "Dataset Baseline Profiling Report for (dataset name)"
+      - Dataset shape (rows × columns), column list, and pandas dtypes.
+      - Per-column documentation:
+          - Human-readable description/meaning (from overview/sample data, plus integrated research meanings if provided)
+          - Data type and any type mismatches
+          - Missing and null value counts and percentages
+          - Number of unique values and list/counts of top 10 values (for categoricals)
+          - Summary statistics for numeric columns (mean, std, min, 25%, 50%, 75%, max, count)
+          - Encoding patterns, if any (e.g., mixed case, trailing spaces, unexpected categories)
+          - Actionable Flags (e.g., Needs type conversion, Needs imputation, High cardinality, Non-informative/constant)
+          - Each actionable flag should be phrased in a way that helps downstream agents 
+          (e.g., "Needs imputation due to 35% missingness").
+          - Example problematic values
+      - Sections on:
+          - Data types and format mismatches
+          - Missingness overview
+          - Categorical value summaries
+          - Non-informative (constant) column flags
+          - Short notes for downstream diagnostics
+      - **Online Research Summary** section containing:
+          - Column meanings (researched or "unknown")
+          - Domain context and dataset use cases
+          - Relevant external developments
+      - Explicit disclaimer: "No cleaning, dropping, or alteration was performed in this report—this is descriptive profiling only."
+      - Mention that duplicate rows/columns were not checked in this task.
+      - All key statistics/code-backed claims must be derived using Python and pandas in the CodeInterpreterTool.
+      - All output strictly in clean, readable markdown.
+      - The markdown output MUST end with the line: "END OF REPORT"
+
+  context: 
+    - data_research_task
+
+  agent: data_profiling_agent

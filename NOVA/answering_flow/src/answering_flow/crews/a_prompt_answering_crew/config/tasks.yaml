@@ -1,0 +1,171 @@
+answering_plan_task:
+  description: >
+    **Inputs:**
+      - The baseline profiling report (general overview of the dataset before any cleaning was performed): {data_profiling_report}
+      - A report describing all the cleaning actions taken by the cleaning crew: {summary_cleaning_report}
+      - The dataset's column names ({columns}) and sample rows ({sample_rows})
+      - The user's prompt: {user_prompt}
+
+    Produce a **fully executable, deterministic plan** that another agent will follow **exactly**.
+    Do **not** restate file-I/O rules; the executor already follows the final task’s contract
+    (writing `final_answer.md` and saving all figures/tables into `{answering_reports_dir}`).
+    Your job is to specify **what** to compute/visualize, **which dataset** to use for each step,
+    and **the exact filenames** the executor must produce.
+
+    **The plan MUST specify:**
+      1) **dataset_choice**: "original" | "cleaned" | "both", with a 1–2 sentence justification.
+         - If "original": use `{csv_file_path}`
+         - If "cleaned": use `{cleaned_dir}/cleaned_data_three.csv`
+         - If "both": list which steps use which path.
+      2) **outputs**: concrete filenames (lowercase, snake_case) the executor must create
+         in `{answering_reports_dir}`:
+         - figures: e.g., `fig_01_overview.png`, `fig_02_trend.png`
+         - tables (optional CSVs): e.g., `table_01_summary.csv`
+         (The final markdown name is defined by the executor contract and need not be listed here.)
+      3) **steps** (ordered, atomic). Each step must include:
+         - `name`: short identifier
+         - `uses_dataset`: "original" | "cleaned" | "both" (and which path if "both")
+         - `inputs`: exact column names, plus filters/joins/groupby if any
+         - `operation`: clear action (e.g., "groupby + agg", "compute correlation", "filter by range_km > 400")
+         - `chart_spec` (if plotting): `type` (bar/line/hist/box/scatter), `x`, `y`, optional `hue/facet`,
+           aggregations, labels/title, and the **exact** `output_png` filename (under `{answering_reports_dir}`)
+         - `table_spec` (if tabular): included columns, sort, top-k/n, and optional `output_csv` filename
+         - `code_blueprint`: brief pseudocode (imports + 3–8 lines) sufficient for the executor to implement
+           without adding logic (no I/O directives—those are in the final task)
+         - `expected_output`: human description (e.g., “PNG fig_02_trend.png + DataFrame [brand, mean_efficiency]”)
+         - `depends_on`: prior step names (if any)
+      4) **narrative_structure**: headings to include in `final_answer.md` and which
+         figures/tables are referenced in each section (Introduction, Methods, Findings, Conclusion).
+      5) **validation_checks**: pre-report checks the executor must run, e.g.:
+         - All referenced columns exist in selected dataset(s)
+         - Figures listed in `outputs.figures` were created successfully
+         - Key metrics used in the narrative are non-null and internally consistent
+      6) **assumptions** (only if needed and grounded in the cleaning report); avoid inventing new rules.
+
+    **Constraints & notes:**
+      - Do **not** perform any analysis; deliver the plan only.
+      - Use exact column names from {columns}. Resolve any ambiguity here so the executor won’t.
+      - Prefer the **cleaned** dataset unless the prompt explicitly needs raw/original values or a comparison.
+      - All filenames you specify are relative to `{answering_reports_dir}` and must be lowercase snake_case.
+
+
+  expected_output: >
+    A **single JSON object** matching the required keys above, with concrete filenames and an
+    ordered list of steps (each with chart/table specs and minimal code blueprints), plus
+    narrative structure and validation checks—so the executor can follow it **without modification**.
+  agent: answering_plan_agent
+
+
+
+plan_review_task:
+  description: >
+
+    **Inputs:**
+      - The baseline profiling report (general overview of the dataset before any cleaning was performed): {data_profiling_report}
+      - A report describing all the cleaning actions taken by the cleaning crew: {summary_cleaning_report}
+      - The dataset's column names ({columns}) and sample rows ({sample_rows})
+      - The user's prompt: {user_prompt}
+      - As "context", you were also provided the proposed answering plan in JSON format from the answering_plan_agent.
+
+    Review the proposed answering plan carefully. Your role is to **verify, correct, and finalize**
+    the plan so it can be executed directly by the final_answering_agent without ambiguity.
+
+    **Checks you must perform:**
+      - The plan selects the correct dataset(s) (original, cleaned, or both) with justification.
+      - All steps are necessary, correctly ordered, and sufficient to fully answer the user’s prompt.
+      - The operations, transformations, and visualizations are feasible with the provided dataset(s).
+      - Filenames, column names, and references are consistent and executable.
+      - No redundant, missing, or unclear steps remain.
+      - The narrative structure and validation checks are logical and complete.
+
+    **If issues are found:**
+      - Correct them directly in the JSON (do not provide commentary-only fixes).
+      - Add a `"modifications"` field at the top level, summarizing what was changed and why.
+
+    **Output format:**
+      - A single, valid JSON object with the **same structure required by answering_plan_task**
+        (dataset_choice, datasets, outputs, steps, narrative_structure, validation_checks, assumptions),
+        plus the `"modifications"` field.
+
+    Do not redesign the plan from scratch unless it is fundamentally broken. Keep valid parts intact.
+
+  expected_output: >
+    A corrected, verified JSON plan ready for execution by the final_answering_agent,
+    containing the original structure with all necessary fixes applied and a
+    "modifications" field explaining changes.
+  context:
+    - answering_plan_task
+  agent: plan_review_agent
+
+
+
+final_answering_task:
+  description: >
+
+    **Inputs:**
+      - The absolute path to the original version of the dataset: {csv_file_path}
+      - The absolute path to the clean version of the dataset: {cleaned_dir}/cleaned_data_three.csv
+      - The absolute path to the directory for all images and reports you generate: {answering_reports_dir}
+      - The dataset's column names ({columns}) and sample rows ({sample_rows})
+      - The user's prompt: {user_prompt}
+      - As "context", you were also provided the proposed answering plan in JSON format from the plan_review_agent.
+
+    Execute the reviewed answering plan exactly as written, using the dataset chosen in the plan (original, 
+    cleaned, or both). Follow the plan step-by-step, do not redesign or reinterpret it, producing all 
+    required intermediate and final outputs, including:
+      - Tables, charts, or visualizations.
+      - Calculated metrics or derived datasets.
+      - Narrative explanations or summaries.
+
+    **File I/O contract (mandatory):**
+      - Save **every chart/figure** you generate to **PNG files** in **{answering_reports_dir}**.
+        Use clear filenames like `fig_01_overview.png`, `fig_02_trend.png`, etc.
+      - Filenames must be filesystem-safe (lowercase, no spaces; use underscores).
+      - Compose a **single, self-contained Markdown report** and **write it to**
+        **{answering_reports_dir}/final_answer.md**. The report must embed the saved figures with
+        relative paths (e.g., `![Title](fig_01_overview.png)`).
+      - Any derived tables intended for the report must either be:
+        - rendered as Markdown tables in the report, **and/or**
+        - saved as CSVs in {answering_reports_dir} and referenced in the report.
+
+
+
+    **Report requirements:**
+      - Title, introduction (restate the user's prompt), data context, methodology/plan recap.
+      - Findings with narrative and explanation; include tables and figures at appropriate points.
+      - Clear labels, legends, and axes for all figures; reference them in the text.
+      - Conclusion answering the prompt directly; note caveats/assumptions.
+      - Maintain a professional, readable, and polished style.
+
+    Ensure that:
+      - All outputs match the format and structure described in the reviewed plan.
+      - All visualizations are clear, labeled, and visually consistent.
+      - All numbers and statistics are accurate and consistent with the dataset.
+      - The Markdown is valid and renders properly.
+
+    **Rules:**
+      - **When using the CodeInterpreterTool, always output a Python variable named `result` containing the final value or DataFrame; 
+        do not use/rely on only print statements.**
+      - If you use the CodeInterpreterTool more than once, **you must include `import pandas as pd` at the start of every code block**,
+        along with any other imports you need, because each tool call runs in a fresh environment and does not preserve previous imports or variables.
+      - Use Python/pandas code (with CodeInterpreterTool).
+      - Do not make assumptions without evidence from data or column descriptions.
+      - If code that you are writing results in errors, find new ways to achieve the same result, don't keep on trying to run the same code.
+      - When plotting:
+        - Use `import matplotlib.pyplot as plt`.
+        - After creating a figure, call `plt.savefig(f"{answering_reports_dir}/<filename>.png", bbox_inches="tight", dpi=200)`
+          and then `plt.close()` to avoid memory/overplotting.
+        - Never display plots with `plt.show()`.
+
+    **Quality checks (must pass):**
+      - All figures referenced in the Markdown exist in {answering_reports_dir}.
+      - The file **{answering_reports_dir}/final_answer.md** exists and renders without broken image links.
+      - Numbers in the narrative match computed outputs.
+      - Every image referenced in the Markdown has a corresponding PNG file **with the exact same relative name**.
+
+  expected_output: >
+    The file **{answering_reports_dir}/final_answer.md** plus any images (PNG) and auxiliary CSVs referenced by the report.
+
+  context:
+    - plan_review_task
+  agent: final_answering_agent

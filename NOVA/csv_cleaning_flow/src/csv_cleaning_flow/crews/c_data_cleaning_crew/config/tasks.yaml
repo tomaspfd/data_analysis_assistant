@@ -1,0 +1,307 @@
+numerical_cleaning_task:
+  description: >
+    Clean all quantitative columns in the dataset using the issues and recommendations from
+    the numerical cleaning plan, supported by the baseline profiling report. Your job is
+    to implement every cleaning action that was recommended—no more, no less—and record exactly
+    what you change.
+
+    **Inputs:**
+      - The absolute path to the full CSV file: {csv_file_path}
+      - The baseline profiling report (general overview of the dataset with column types/meanings/actionable flags): {data_profiling_report}
+      - The numerical cleaning plan (plan of the cleaning actions to be taken for numerical columns): {numerical_cleaning_plan}
+      - The dataset's column names ({columns}) and sample rows ({sample_rows})
+      - The absolute path to the cleaned datasets directory, cleaned_dir = {cleaned_dir}
+
+    **Steps:**
+      0. In every CodeInterpreterTool block, start with this preamble to anchor paths and ensure the directory exists:
+         ```
+         import pandas as pd
+         from pathlib import Path
+         import os, json
+
+         cleaned_dir = Path("{cleaned_dir}")
+         cleaned_dir.mkdir(parents=True, exist_ok=True)
+         ```
+      1. Read the baseline profiling report, which contains a general overview of the dataset. Carefully read the numerical 
+         cleaning plan checklist and recommendations, which includes the changes you will implement.
+      2. For each flagged issue in the numerical cleaning plan, apply the recommended cleaning:
+          - Fix data type mismatches (e.g., convert columns to float, int)
+          - Remove or correct embedded units or text in numeric columns
+          - Impute, cap, or remove outliers as specifically recommended (do not invent)
+          - Replace or handle physically impossible values as recommended (e.g., negatives, zeros)
+          - Apply only those cleaning actions that are justified and described in the cleaning plan.
+      3. For every change, log:
+          - Column name, row index (or count/range), original value(s), new value(s), type of fix applied
+      4. After cleaning, re-run summary stats on each affected column and show before/after differences.
+      5. Produce a markdown report with:
+          - All cleaning actions taken, with brief explanations
+          - Table of all changes (column, index, original, new, type of fix)
+          - Quick summary: number of values changed, columns affected, outliers handled
+          - **Any issues NOT fixed (with justification)**
+          - Tool/technical limitations or any ambiguities
+      6. **Save** the cleaned DataFrame as a new variable `df_cleaned`.
+      7. Save the change log as a variable `change_log` (ideally a DataFrame or dict).
+      8. After assigning the final cleaned DataFrame (after all changes) to `df_cleaned`, export it using:
+         ```
+         df_cleaned.to_csv(str(cleaned_dir / "cleaned_data_one.csv"), index=False)
+         ```
+
+    **Rules:**
+      - Do not perform any cleaning that is not explicitly justified in the cleaning plan.
+      - Do not drop rows or columns unless specifically recommended.
+      - Use pandas and Python code for all changes (with CodeInterpreterTool); log every alteration for full transparency.
+      - Output must be markdown-ready, audit-friendly, and clear for downstream agents or human review.
+      - **When calling the CodeInterpreterTool, always output variables `df_cleaned` (cleaned DataFrame) and `change_log` (log of changes). Do not use/rely on only 
+        print statements.**
+      - If you use the CodeInterpreterTool more than once, **you must include `import pandas as pd` at the start of every code block**, 
+        because each tool call runs in a fresh environment and does not preserve previous imports or variables.
+      - Do not skip any columns or errors.
+      - If code that you are writing results in errors, find new ways to achieve the same result, don't keep on trying to run the same code.
+
+  expected_output: >
+    - Markdown cleaning report containing:
+        - Detailed account of each numeric cleaning action taken
+        - Table: "Column | Index | Original Value | New Value | Type of Fix"
+        - Quick summary of number of cells/columns changed, and outlier handling
+        - Section: "Issues Not Fixed" (with reason why not)
+        - Section: "Tool/technical limitations"
+        - New pandas DataFrame `df_cleaned` (cleaned data)
+        - DataFrame or dict `change_log` (full cleaning log)
+    - Clean CSV **saved** to "{cleaned_dir}/cleaned_data_one.csv" containing the cleaned dataset
+
+  agent: numerical_cleaning_agent
+
+
+
+
+categorical_cleaning_task:
+  description: >
+    Clean all categorical, text, and date columns in the dataset using the issues and recommendations 
+    from the categorical cleaning plan and the profiling baseline. Implement every cleaning action 
+    explicitly recommended—no more, no less—and keep a detailed log.
+
+    **Inputs:**
+      - The absolute path to the latest version of the dataset, after the first cleaning step: {cleaned_dir}/cleaned_data_one.csv
+      - The baseline profiling report (general overview of the dataset with column types/meanings/actionable flags): {data_profiling_report}
+      - The categorical cleaning plan (plan of the cleaning actions to be taken for categorical columns): {categorical_cleaning_plan}
+      - The dataset's column names ({columns}) and sample rows ({sample_rows})
+      - As "context", you are also provided the report from the first cleaning agent, that performs cleaning for numerical columns, which talks about the 
+        cleaning actions that were already taken by it.
+      - The absolute path to the cleaned datasets directory, cleaned_dir = {cleaned_dir}
+
+    **Steps:**
+      0. In every CodeInterpreterTool block, start with this preamble to anchor paths and ensure the directory exists:
+         ```
+         import pandas as pd
+         from pathlib import Path
+         import os, json
+
+         cleaned_dir = Path("{cleaned_dir}")
+         cleaned_dir.mkdir(parents=True, exist_ok=True)
+         input_csv = cleaned_dir / "cleaned_data_one.csv"
+         ```
+      1. Read the baseline profiling report, which contains a general overview of the dataset. Carefully read the categorical 
+         cleaning plan checklist and recommendations, which includes the changes you will implement. Also carefully read the 
+         report from the first (numerical) cleaning agent, which contains the cleaning actions that were already taken, which you are not allowed to repeat.
+      2. For each flagged issue in the categorical cleaning plan, apply the recommended cleaning:
+          - Fix encoding errors (e.g., strip whitespace, unify capitalization, correct typos)
+          - Merge/standardize categories as recommended (combine rare categories, harmonize values)
+          - Parse and standardize date columns (convert to datetime, handle malformed formats as specified)
+          - Correct or flag text columns with HTML, emojis, symbols, or unusual formatting as recommended
+          - For high cardinality columns, perform only the actions explicitly recommended in the diagnostics
+      3. For every change, log:
+          - Column name, row index (or count/range), original value(s), new value(s), type of fix applied
+      4. After cleaning, re-run summary stats on each affected column and show before/after differences.
+      5. Produce a markdown report with:
+          - All cleaning actions taken, with brief explanations
+          - Table of all changes ("Column | Index | Original Value | New Value | Type of Fix")
+          - Quick summary: number of values changed, columns affected
+          - Section: Issues Not Fixed (with justification)
+          - Section: Tool/technical limitations or data ambiguities
+      6. Save the cleaned DataFrame as a new variable `df_cleaned`.
+      7. Save the change log as a variable `change_log` (DataFrame or dict).
+      8. Export the final cleaned dataset to CSV, saving it as the following:
+         ```
+         df_cleaned.to_csv(str(cleaned_dir / "cleaned_data_two.csv"), index=False)
+         ```
+
+    **Rules:**
+      - Do not perform any cleaning actions that were already taken by the first cleaning agent.
+      - Do not perform any cleaning that is not explicitly described and justified in the cleaning plan.
+      - Do not drop rows or columns unless specifically instructed in the diagnostics.
+      - Output must be markdown-ready, audit-friendly, and clear for downstream agents/humans.
+      - Use pandas and Python code for all changes (with CodeInterpreterTool); log every alteration for full transparency.
+      - **Always output variables `df_cleaned` (cleaned DataFrame) and `change_log` (log of changes). Do not use/rely on only 
+        print statements.**
+
+  expected_output: >
+    - Markdown cleaning report containing:
+        - Detailed record of each categorical/text/date cleaning action
+        - Table: "Column | Index | Original Value | New Value | Type of Fix"
+        - Quick summary of number of cells/columns changed
+        - Section: "Issues Not Fixed" (with justification)
+        - Section: "Tool/technical limitations"
+        - Pandas DataFrame `df_cleaned` (cleaned dataset)
+        - DataFrame or dict `change_log` (full log of changes)
+    - CSV export to "{cleaned_dir}/cleaned_data_two.csv" containing the cleaned dataset
+  context:
+    - numerical_cleaning_task
+
+  agent: categorical_cleaning_agent
+
+
+
+integral_cleaning_task:
+  description: >
+    Clean and repair all dataset integrity, missingness, uniqueness, and structural issues according 
+    to the integrity cleaning plan and the profiling baseline. Follow every cleaning recommendation 
+    provided—do not improvise or apply new logic beyond explicit instructions. Log every action for 
+    traceability.
+
+    **Inputs:**
+      - The absolute path to the latest version of the dataset, after the first and second cleaning steps: {cleaned_dir}/cleaned_data_two.csv
+      - The baseline profiling report (general overview of the dataset with column types/meanings/actionable flags): {data_profiling_report}
+      - The integrity cleaning plan (plan of the cleaning actions to be taken for overall dataset integrity, including 
+        checklist table and quick wins): {integrity_cleaning_plan}
+      - The dataset's column names ({columns}) and sample rows ({sample_rows})
+      - As "context", you are also provided the reports from the first (numerical columns) and second (categorical columns) 
+        cleaning agents, that describe the cleaning actions that were already taken by them.
+      - The absolute path to the cleaned datasets directory, cleaned_dir = {cleaned_dir}
+
+    **Steps:**
+      0. In every CodeInterpreterTool block, start with this preamble to anchor paths and ensure the directory exists:
+         ```
+         import pandas as pd
+         from pathlib import Path
+         import os, json
+
+         cleaned_dir = Path("{cleaned_dir}")
+         cleaned_dir.mkdir(parents=True, exist_ok=True)
+         input_csv = cleaned_dir / "cleaned_data_two.csv"
+         ```
+      1. Read the baseline profiling report, which contains a general overview of the dataset. Carefully read the integrity 
+         cleaning plan checklist and recommendations, which includes the changes you will implement. Also carefully read the 
+         reports from the first and second cleaning agents, which contains the cleaning actions that were already taken, which you are not allowed to repeat.
+      2. For each flagged issue in the integrity cleaning plan, implement the recommended cleaning:
+          - Impute missing values using the specified strategy (mean, median, mode, constant, or domain rule)
+          - Drop or merge columns/rows as explicitly advised (e.g., all-missing columns, duplicate rows)
+          - Enforce primary key or uniqueness constraints; fix or report violations as recommended
+          - Standardize or rename columns per schema/naming recommendations
+          - Repair structural issues (e.g., column order, datatype consistency) as directed
+          - For cross-field or referential errors, apply fixes only as specified in the diagnostics
+      3. For every change, record:
+          - Issue addressed, affected column(s)/row(s), original value(s)/state, new value(s)/state, type of fix
+      4. After cleaning, re-calculate and report key stats on all affected fields (before/after, as applicable)
+      5. Produce a markdown report with:
+          - List of all cleaning actions taken (with justifications)
+          - Table: "Issue | Column(s)/Row(s) | Original | New | Type of Fix"
+          - Quick summary of records/columns/cells affected
+          - "Issues Not Fixed" section (with explanations)
+          - Tool/technical limitations/ambiguities
+      6. Save the cleaned DataFrame as `df_cleaned`.
+      7. Save the full change log as `change_log` (DataFrame or dict).
+      8. Export the final cleaned dataset to CSV, saving it as the following:
+         ```
+         df_cleaned.to_csv(str(cleaned_dir / "cleaned_data_three.csv"), index=False)
+         ```
+
+    **Rules:**
+      - Do not perform any cleaning actions that were already taken by the first and second cleaning agents.
+      - Do not perform any cleaning that is not explicitly justified in the cleaning plan.
+      - Do not drop rows or columns unless specifically recommended.
+      - Use pandas and Python code for all changes (with CodeInterpreterTool); log every alteration for full transparency.
+      - Output must be markdown-ready, audit-friendly, and clear for downstream agents or human review.
+      - **Always output variables `df_cleaned` (cleaned DataFrame) and `change_log` (log of changes). Do not use/rely on only 
+        print statements.**
+
+  expected_output: >
+    - Markdown report including:
+        - List of all integrity/missingness/uniqueness cleaning actions with justifications
+        - Table: "Issue | Column(s)/Row(s) | Original | New | Type of Fix"
+        - Quick summary of changes (how many, what was affected)
+        - Section: "Issues Not Fixed" (with explanations)
+        - Section: "Tool/technical limitations"
+        - `df_cleaned` (cleaned pandas DataFrame)
+        - `change_log` (audit log as DataFrame or dict)
+    - CSV export to "{cleaned_dir}/cleaned_data_three.csv" containing the cleaned dataset
+
+  context:
+    - numerical_cleaning_task
+    - categorical_cleaning_task
+
+  agent: integral_cleaning_agent
+
+
+
+
+cleaning_reporting_task:
+  description: >
+    Consolidate the three cleaning reports (numerical, categorical, integral) into a
+    single, complete, audit-ready **Master Cleaning Report**. This report must describe
+    every cleaning action taken across all stages, in pipeline order (numerical → categorical
+    → integral), with full detail, context, and provenance. You are NOT to perform any
+    further cleaning or dataset modification—your sole task is to merge, reconcile,
+    and document.
+
+    **Inputs (paths/strings will be injected):**
+      - As context, you received the numerical cleaning report, the categorical cleaning report, and the integral cleaning report. These
+      reports describe the cleaning actions that were taken by the three cleaning agents.
+      - The baseline profiling report (general overview of the dataset with column types/meanings/actionable flags): {data_profiling_report}
+      - The dataset's column names ({columns}) and sample rows ({sample_rows})
+
+    **Steps:**
+      1. Read the three cleaning reports in order (numerical, categorical, integral).
+      2. Extract all sections that describe cleaning actions, summaries, and issues not fixed.
+      3. Normalize the reporting style so all actions are expressed consistently
+         (e.g., Column | Index | Original Value | New Value | Type of Fix | Stage).
+      4. Merge the actions into one unified chronological narrative:
+         - Keep stage order explicit.
+         - If the same element was touched in multiple stages, record only the **final**
+           state in the main body but preserve earlier actions in an Appendix.
+      5. Summarize:
+         - Total number of actions taken across all stages.
+         - Columns affected and types of fixes applied.
+         - Key before/after highlights if available from the source reports.
+      6. Combine the “Issues Not Fixed” sections from all three reports into a consolidated section,
+         grouped by column/issue type.
+      7. Collect all tool/technical limitations mentioned across reports into a single section.
+      8. Provide an executive summary (≤200 words) describing what was cleaned overall, main challenges,
+         and what remains as limitations.
+      9. Organize the final Markdown report using the required structure below.
+
+    **Report structure (Markdown):**
+      # Master Cleaning Report
+      - Executive Summary
+      - Dataset Lineage (stage-by-stage with references to reports)
+      - Consolidated Cleaning Actions
+        - Chronological list with clear stage tags
+        - Unified table of actions: Column | Index | Original | New | Type of Fix | Stage
+      - Summaries
+        - Overall counts and statistics (actions, columns affected, etc.)
+      - Issues Not Fixed (consolidated from all three)
+      - Tool/Technical Limitations
+      - Discrepancies & Reconciliation Notes
+      - Appendix
+        - Superseded Actions (earlier changes later overwritten)
+
+    **Rules:**
+      - Do NOT invent new actions—only report what is in the three inputs.
+      - Do NOT repeat actions across stages; merge them carefully with clear lineage.
+      - Write in a consistent, audit-friendly style with headings, tables, and lists.
+      - Be transparent about discrepancies or conflicts between reports.
+      - Ensure the final report is highly detailed but clearly structured for human review.
+
+  expected_output: >
+    - The report must contain:
+      - Full merged record of all cleaning actions, with tables and explanations
+      - Clear stage lineage (numerical, categorical, integral)
+      - Consolidated summaries and unresolved issues
+      - Transparent documentation of discrepancies and superseded actions
+      - An executive summary and limitations section for quick consumption
+    - Your final output shall be markdown-ready, as it will be saved directly into a `.md` file.
+
+  agent: cleaning_reporting_agent
+  context:
+    - numerical_cleaning_task
+    - categorical_cleaning_task
+    - integral_cleaning_task

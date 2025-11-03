@@ -1,0 +1,561 @@
+numerical_diagnostic_task:
+  description: >
+    Perform a comprehensive deep-dive analysis of all numeric and quantitative columns in the dataset.
+    Identify outliers, invalid values, unit mismatches, data type inconsistencies, and distributional issues.
+
+    **Inputs:**
+      - The dataset: column names ({columns}) and sample rows ({sample_rows})
+      - The path to the full CSV file: {csv_file_path}
+      - The baseline profiling report, which is your primary reference for column types, flags, quick wins, and more. Please review it thoroughly before starting
+        your analysis, as it serves as the foundation for your work: {data_profiling_report}
+      - The absolute path to the reports directory, reports_dir = {reports_dir}
+
+    **Steps:**
+      0. In every CodeInterpreterTool block, start with this preamble to anchor paths and ensure the directory exists:
+         ```
+         import pandas as pd
+         from pathlib import Path
+         import os, json
+
+         reports_dir = Path("{reports_dir}")
+         reports_dir.mkdir(parents=True, exist_ok=True)
+         ```
+      1. Load the CSV file at {csv_file_path} into a pandas DataFrame called `df`.
+      2. Identify all numeric columns (int, float, or object columns expected to be numeric based on column names or previous profiling).
+      3. For each such column:
+          - Confirm data type; check for numeric values stored as strings or mixed types.
+          - Attempt conversion to numeric. If errors occur, list up to 3 example problematic values.
+          - Check for unit mismatches or embedded text (e.g., "100 km", "25 USD") and flag examples.
+      4. Create a summary table: "Issue | Column(s)/Row(s) | Example(s) | Cleaning Recommendation".
+      5. Save the summary table as CSV using:
+         ```
+         findings_df.to_csv(str(reports_dir / "numerical_checks_table.csv"), index=False)
+         ```
+      6. Create a clean markdown report including all diagnostics (apart from the summary table):
+          - Add: "A full issue summary table is saved to {reports_dir}/numerical_checks_table.csv."
+          - End with: `END OF REPORT`
+          - Save it using:
+            ```
+            out_md = reports_dir / "numerical_checks_report.md"
+            with open(out_md, "w", encoding="utf-8") as f:
+                f.write(markdown_content)
+            ```
+
+    **Rules:**
+      - **When using the CodeInterpreterTool, always output a Python variable named `result` containing the final value or DataFrame; do not use/rely on only print statements.**
+      - If you use the CodeInterpreterTool more than once, **you must include `import pandas as pd` at the start of every code block**,
+        because each tool call runs in a fresh environment and does not preserve previous imports or variables.
+      - When adding examples to the findings table, never insert raw dictionaries or lists of dictionaries directly into f-strings. Instead,
+        summarize them (e.g., with a row count) or convert them to JSON-safe strings using `json.dumps(...)`.
+      - Do not recommend final cleaning actions; only flag issues and propose candidate ideas.
+      - Do not skip any columns or errors.
+      - Do not actually alter or clean any data—only diagnose and recommend.
+      - Use Python/pandas code (with CodeInterpreterTool) for every finding.
+      - Do not make assumptions without evidence from data or column descriptions.
+      - If code that you are writing results in errors, find new ways to achieve the same result; don't keep retrying the same failing code.
+
+  expected_output: >
+    - "{reports_dir}/numerical_checks_table.csv": issue summary table with cleaning suggestions.
+    - "{reports_dir}/numerical_checks_report.md": clean markdown report describing all issues found, ending with "END OF REPORT".
+
+  agent: numerical_diagnostic_agent
+
+
+
+
+
+numerical_diagnostic_task_two:
+  description: >
+    Perform a comprehensive deep-dive analysis of all numeric and quantitative columns in the dataset.
+    Identify outliers, invalid values, unit mismatches, data type inconsistencies, and distributional issues.
+
+    **Inputs:**
+      - The dataset: column names ({columns}) and sample rows ({sample_rows})
+      - The path to the full CSV file: {csv_file_path}
+      - The baseline profiling report, which is your primary reference for column types, flags, quick wins, and more.
+        Please review it thoroughly before starting your analysis, as it serves as the foundation for your work:
+        {data_profiling_report}
+      - The absolute path to the reports directory, reports_dir = {reports_dir}
+
+    **Steps:**
+      0. In every CodeInterpreterTool block, start with this preamble to anchor paths and ensure the directory exists:
+         ```
+         import pandas as pd
+         from pathlib import Path
+         import os, json
+
+         reports_dir = Path("{reports_dir}")
+         reports_dir.mkdir(parents=True, exist_ok=True)
+         ```
+      1. Load the CSV file at {csv_file_path} into a pandas DataFrame called `df`.
+      2. Identify all numeric columns (int, float, or object columns expected to be numeric based on column names or previous profiling).
+      3. For each such column:
+          - Perform outlier detection using IQR and Z-score, flagging extreme values with examples (3 each).
+          - Analyze the distribution: report basic stats, skewness, and describe an appropriate visualization (no actual plotting).
+          - Flag physically impossible or suspicious values (negatives where not possible, zeros where invalid, out-of-range by physical or domain rules if known).
+      4. Create a summary table: "Issue | Column(s)/Row(s) | Example(s) | Cleaning Recommendation".
+      5. Save the summary table as CSV using:
+         ```
+         findings_df.to_csv(str(reports_dir / "numerical_checks_table_two.csv"), index=False)
+         ```
+      6. Create a clean markdown report including all diagnostics (apart from the summary table):
+          - Add: "A full issue summary table is saved to {reports_dir}/numerical_checks_table_two.csv."
+          - End with: `END OF REPORT`
+          - Save it using:
+            ```
+            out_md = reports_dir / "numerical_checks_report_two.md"
+            with open(out_md, "w", encoding="utf-8") as f:
+                f.write(markdown_content)
+            ```
+
+    **Rules:**
+      - **When using the CodeInterpreterTool, always output a Python variable named `result` containing the final value or DataFrame; do not rely only on print statements.**
+      - If you use the CodeInterpreterTool more than once, **include `import pandas as pd` at the start of every code block** (each run is a fresh environment).
+      - When adding examples to the findings table, never insert raw dicts/lists directly into f-strings; summarize them or use `json.dumps(...)`.
+      - Do not recommend final cleaning actions; only flag issues and propose candidate ideas.
+      - Do not skip any columns or errors. Do not actually alter or clean any data—only diagnose and recommend.
+      - Use Python/pandas code (with CodeInterpreterTool) for every finding.
+      - Do not make assumptions without evidence from data or column descriptions.
+      - If code you write results in errors, find a new way to achieve the same result; do not keep retrying the same failing code.
+
+  expected_output: >
+    - "{reports_dir}/numerical_checks_table_two.csv": issue summary table with cleaning suggestions.
+    - "{reports_dir}/numerical_checks_report_two.md": clean markdown report describing all issues found, ending with "END OF REPORT".
+
+  agent: numerical_diagnostic_agent_two
+
+
+
+numerical_cleaning_planner_task:
+  description: >
+    Review the findings from the numerical diagnostic agent and determine exactly what cleaning steps should be applied to the dataset.
+
+    **Inputs:**
+      - The dataset: column names ({columns}) and sample rows ({sample_rows})
+      - The path to the full CSV file: {csv_file_path}
+      - The baseline profiling report, which is your primary reference for column types, flags, quick wins, and more. Please review it thoroughly before starting
+        your analysis, as it serves as the foundation for your work: {data_profiling_report}
+      - The absolute path to the reports directory: {reports_dir}
+      - First numerical agent's findings table (CSV) absolute file path: {reports_dir}/numerical_checks_table.csv
+      - First numerical agent's diagnostics report (Markdown) absolute file path: {reports_dir}/numerical_checks_report.md
+      - Second numerical agent's findings table (CSV) absolute file path: {reports_dir}/numerical_checks_table_two.csv
+      - Second numerical agent's diagnostics report (Markdown) absolute file path: {reports_dir}/numerical_checks_report_two.md
+
+    **Steps:**
+      0. Load the findings from the numerical report and the CSV file with a findings table, using the FileReadTool and the file paths provided.
+      1. Ensure **no issue is overlooked**—every row in the findings table must be addressed.
+      2. For each flagged issue in the reports and the table:
+         - Evaluate whether it requires cleaning.
+         - Justify why it should or should not be cleaned.
+         - Provide the exact cleaning step (e.g., drop duplicates, standardize column name).
+      3. Compile a clear cleaning plan as markdown:
+         - Table: "Issue | Column(s)/Row(s) | Recommended Cleaning Action | Justification"
+         - List of top-priority cleaning actions.
+         - Note any assumptions, ambiguities, or risks.
+         - Add a final sentence: "This plan is based strictly on the numerical findings."
+
+    **Rules:**
+      - Try to reason mostly based on provided findings, but if you need more information
+      than was provided, use the CodeInterpreterTool with python and pandas.
+      - **If you use the CodeInterpreterTool, always output a Python variable named `result` containing the final value or DataFrame; 
+      do not use/rely on only print statements.**
+      - If you use the CodeInterpreterTool more than once, **you must include `import pandas as pd` at the start of every code block**, 
+      because each tool call runs in a fresh environment and does not preserve previous imports or variables.
+      - When adding examples to the findings table, never insert raw dictionaries or lists of dictionaries directly into f-strings. Instead, 
+      summarize them (e.g., with a row count) or convert them to JSON-safe strings using json.dumps() or a similar method.
+      - Do not miss or ignore any issue from the findings table.
+      - You may suggest alternate actions but must reference the findings.
+      - Your output must be markdown-ready and actionable by a cleaning agent. The cleaning agent
+      will then use the plan directly to clean the dataset.
+
+  expected_output: >
+    - A markdown cleaning plan including:
+        - Evaluation and decision for every flagged numerical issue
+        - Actionable recommendations and justifications
+        - Prioritized cleaning steps
+
+  agent: numerical_cleaning_planner_agent
+
+
+
+
+
+categorical_diagnostic_task:
+  description: >
+    Perform a deep-dive analysis of all categorical, text, and date columns.
+    Identify encoding inconsistencies, rare values, formatting problems, and date parsing issues.
+
+    **Inputs:**
+      - The dataset: column names ({columns}) and sample rows ({sample_rows})
+      - The path to the full CSV file: {csv_file_path}
+      - The baseline profiling report, which is your primary reference for column types, flags, quick wins, and more.
+        Please review it thoroughly before starting your analysis, as it serves as the foundation for your work: {data_profiling_report}
+      - The absolute path to the reports directory, reports_dir = {reports_dir}
+
+    **Steps:**
+      0. In every CodeInterpreterTool block, start with this preamble to anchor paths and ensure the directory exists:
+         ```
+         import pandas as pd
+         from pathlib import Path
+         import os, json
+
+         reports_dir = Path("{reports_dir}")
+         reports_dir.mkdir(parents=True, exist_ok=True)
+         ```
+      1. Load the CSV file at {csv_file_path} into a pandas DataFrame called `df`.
+      2. Identify all non-numeric columns (object, string, category, or date/datetime types).
+      3. For each such column:
+          - Confirm column type and detect if numeric columns are stored as categorical/text by mistake.
+          - Check for encoding inconsistencies:
+              - Spelling/capitalization variations ("yes", "Yes", "YES"), trailing/leading whitespace, typos.
+              - Up to 3 example problematic values for each inconsistency.
+          - Detect and list rare or singleton categories (categories with very low frequency, e.g. <1% or occurring once).
+          - Flag unexpected or out-of-vocabulary values (if a known set exists; otherwise, document all unique values).
+      4. Create a summary table: "Issue | Column(s)/Row(s) | Example(s) | Cleaning Recommendation".
+      5. Save the summary table as CSV using:
+         ```
+         findings_df.to_csv(str(reports_dir / "categorical_checks_table.csv"), index=False)
+         ```
+      6. Create a clean markdown report including all diagnostics (apart from the summary table):
+          - Add: "A full issue summary table is saved to {reports_dir}/categorical_checks_table.csv."
+          - End with: `END OF REPORT`
+          - Save it using:
+            ```
+            out_md = reports_dir / "categorical_checks_report.md"
+            with open(out_md, "w", encoding="utf-8") as f:
+                f.write(markdown_content)
+            ```
+
+    **Rules:**
+      - **When using the CodeInterpreterTool, always output a Python variable named `result` containing the final value or DataFrame; do not use/rely on only print statements.**
+      - If you use the CodeInterpreterTool more than once, **you must include `import pandas as pd` at the start of every code block**, because each tool call runs in a fresh environment and does not preserve previous imports or variables.
+      - When adding examples to the findings table, never insert raw dictionaries or lists of dictionaries directly into f-strings. Instead, summarize them (e.g., with a row count) or convert them to JSON-safe strings using json.dumps() or a similar method.
+      - Do not recommend final cleaning actions; only flag issues and propose candidate ideas.
+      - Do not skip any columns or errors.
+      - Do not actually alter or clean any data—only diagnose and recommend.
+      - Use Python/pandas code (with CodeInterpreterTool) for every finding.
+      - Do not make assumptions without evidence from data or column descriptions.
+      - If code that you are writing results in errors, find new ways to achieve the same result, don't keep on trying to run the same code.
+
+  expected_output: >
+    - "{reports_dir}/categorical_checks_table.csv": issue summary table with cleaning suggestions.
+    - "{reports_dir}/categorical_checks_report.md": clean markdown report describing all issues found, ending with "END OF REPORT".
+
+  agent: categorical_diagnostic_agent
+
+
+
+
+categorical_diagnostic_task_two:
+  description: >
+    Perform a deep-dive analysis of all categorical, text, and date columns.
+    Identify encoding inconsistencies, rare values, formatting problems, and date parsing issues.
+
+    **Inputs:**
+      - The dataset: column names ({columns}) and sample rows ({sample_rows})
+      - The path to the full CSV file: {csv_file_path}
+      - The baseline profiling report, which is your primary reference for column types, flags, quick wins, and more. Please review it thoroughly before starting
+        your analysis, as it serves as the foundation for your work: {data_profiling_report}
+      - The absolute path to the reports directory, reports_dir = {reports_dir}
+
+    **Steps:**
+      0. In every CodeInterpreterTool block, start with this preamble to anchor paths and ensure the directory exists:
+         ```
+         import pandas as pd
+         from pathlib import Path
+         import os, json
+
+         reports_dir = Path("{reports_dir}")
+         reports_dir.mkdir(parents=True, exist_ok=True)
+         ```
+      1. Load the CSV file at {csv_file_path} into a pandas DataFrame called df.
+      2. Identify all non-numeric columns (object, string, category, or date/datetime types).
+      3. For each such column:
+          - Flag columns with extremely high cardinality (e.g., >90% unique or as contextually relevant).
+          - For text columns:
+              - Check for irregularities: embedded HTML, emojis, unusual symbols, highly variable length.
+              - Flag and give up to 3 problematic examples.
+          - For date/datetime columns:
+              - Attempt parsing; flag malformed, ambiguous, or inconsistent formats.
+              - Show up to 3 example problematic values.
+      4. Create a summary table: "Issue | Column(s)/Row(s) | Example(s) | Cleaning Recommendation".
+      5. Save this table as CSV using:
+         ```
+         findings_df.to_csv(str(reports_dir / "categorical_checks_table_two.csv"), index=False)
+         ```
+      6. Create a clean markdown report including all diagnostics, apart from the summary table.
+         - Add: "A full issue summary table is saved to {reports_dir}/categorical_checks_table_two.csv."
+         - End with: `END OF REPORT`
+         - Save it using:
+           ```
+           out_md = reports_dir / "categorical_checks_report_two.md"
+           with open(out_md, "w", encoding="utf-8") as f:
+               f.write(markdown_content)
+           ```
+
+    **Rules:**
+      - **When using the CodeInterpreterTool, always output a Python variable named `result` containing the final value or DataFrame; 
+      do not use/rely on only print statements.**
+      - If you use the CodeInterpreterTool more than once, **you must include `import pandas as pd` at the start of every code block**, 
+      because each tool call runs in a fresh environment and does not preserve previous imports or variables.
+      - When adding examples to the findings table, never insert raw dictionaries or lists of dictionaries directly into f-strings. Instead, 
+      summarize them (e.g., with a row count) or convert them to JSON-safe strings using json.dumps() or a similar method.
+      - Do not recommend final cleaning actions; only flag issues and propose candidate ideas.
+      - Do not skip any columns or errors.
+      - Do not actually alter or clean any data—only diagnose and recommend.
+      - Use Python/pandas code (with CodeInterpreterTool) for every finding.
+      - Do not make assumptions without evidence from data or column descriptions.
+      - If code that you are writing results in errors, find new ways to achieve the same result, don't keep on trying to run the same code.
+
+  expected_output: >
+    - "{reports_dir}/categorical_checks_table_two.csv": issue summary table with cleaning suggestions.
+    - "{reports_dir}/categorical_checks_report_two.md": clean markdown report describing all issues found, ending with "END OF REPORT".
+
+  agent: categorical_diagnostic_agent_two
+
+
+
+
+
+categorical_cleaning_planner_task:
+  description: >
+    Review the findings from the two categorical diagnostic agents and determine exactly what cleaning steps should be applied to the dataset.
+
+    **Inputs:**
+      - The dataset: column names ({columns}) and sample rows ({sample_rows})
+      - The path to the full CSV file: {csv_file_path}
+      - The baseline profiling report, which is your primary reference for column types, flags, quick wins, and more. Please review it thoroughly before starting
+        your analysis, as it serves as the foundation for your work: {data_profiling_report}
+      - The absolute path to the reports directory: {reports_dir}
+      - First categorical agent's findings table (CSV) absolute file path: {reports_dir}/categorical_checks_table.csv
+      - First categorical agent's diagnostics report (Markdown) absolute file path: {reports_dir}/categorical_checks_report.md
+      - Second categorical agent's findings table (CSV) absolute file path: {reports_dir}/categorical_checks_table_two.csv
+      - Second categorical agent's diagnostics report (Markdown) absolute file path: {reports_dir}/categorical_checks_report_two.md
+
+    **Steps:**
+      0. Load the findings from both categorical reports and both CSV files with findings tables, using the FileReadTool and the file paths provided.
+      1. Ensure **no issue is overlooked**—every row in both findings tables must be addressed.
+      2. For each flagged issue in both reports and both tables:
+         - Evaluate whether it requires cleaning.
+         - Justify why it should or should not be cleaned.
+         - Provide the exact cleaning step (e.g., drop duplicates, standardize column name).
+      3. Compile a clear cleaning plan as markdown:
+         - Table: "Issue | Column(s)/Row(s) | Recommended Cleaning Action | Justification"
+         - List of top-priority cleaning actions.
+         - Note any assumptions, ambiguities, or risks.
+         - Add a final sentence: "This plan is based strictly on the categorical findings."
+
+    **Rules:**
+      - Try to reason mostly based on provided findings, but if you need more information
+      than was provided, use the CodeInterpreterTool with python and pandas.
+      - **If you use the CodeInterpreterTool, always output a Python variable named `result` containing the final value or DataFrame; 
+      do not use/rely on only print statements.**
+      - If you use the CodeInterpreterTool more than once, **you must include `import pandas as pd` at the start of every code block**, 
+      because each tool call runs in a fresh environment and does not preserve previous imports or variables.
+      - When adding examples to the findings table, never insert raw dictionaries or lists of dictionaries directly into f-strings. Instead, 
+      summarize them (e.g., with a row count) or convert them to JSON-safe strings using json.dumps() or a similar method.
+      - Do not miss or ignore any issue from the findings table.
+      - You may suggest alternate actions but must reference the findings.
+      - Your output must be markdown-ready and actionable by a cleaning agent. The cleaning agent
+      will then use the plan directly to clean the dataset.
+
+  expected_output: >
+    - A markdown cleaning plan including:
+        - Evaluation and decision for every flagged categorical issue
+        - Actionable recommendations and justifications
+        - Prioritized cleaning steps
+
+  agent: categorical_cleaning_planner_agent
+
+
+
+
+
+integrity_diagnostic_task:
+  description: >
+    Detect integrity issues in the dataset and document all findings using pandas and Python.
+
+    **Inputs:**
+      - The dataset: column names ({columns}) and sample rows ({sample_rows})
+      - The path to the full CSV file: {csv_file_path}
+      - The baseline profiling report, which is your primary reference for column types, flags, quick wins, and more. Please review it thoroughly before starting
+        your analysis, as it serves as the foundation for your work: {data_profiling_report}
+      - The absolute path to the reports directory, reports_dir = {reports_dir}
+
+    **Steps:**
+      0. In every CodeInterpreterTool block, start with this preamble to anchor paths and ensure the directory exists:
+         ```
+         import pandas as pd
+         from pathlib import Path
+         import os, json
+
+         reports_dir = Path("{reports_dir}")
+         reports_dir.mkdir(parents=True, exist_ok=True)
+         ```
+      1. Import pandas and load the CSV file at {csv_file_path} into a DataFrame called `df`.
+      2. Analyze missing values:
+         - For each column, report total count and percentage of null/missing values.
+         - Check for columns with ALL missing or only one unique value (constant).
+         - Detect patterns/correlations in missingness across multiple columns (e.g., same rows missing multiple fields).
+         - Flag columns with high or suspicious missingness.
+      3. Identify duplicates:
+         - Check for exact duplicate rows; report count and show up to 3 example rows.
+         - Check for partial duplicates if relevant (e.g., same primary key but other columns differ).
+      4. Uniqueness & key constraints:
+         - Suggest candidate primary key(s) (columns or column sets with all-unique values).
+         - For known or likely keys, check for uniqueness violations.
+         - If reference/foreign tables are available, check referential integrity for foreign keys.
+      5. Create a summary table: "Issue | Column(s)/Row(s) | Example(s) | Cleaning Recommendation".
+      6. Save this table as CSV using:
+         ```
+         findings_df.to_csv(str(reports_dir / "integrity_checks_table.csv"), index=False)
+         ```
+      7. Create a clean markdown report including all diagnostics, apart from the summary table.
+         - Add: "A full issue summary table is saved to {reports_dir}/integrity_checks_table.csv."
+         - End with: `END OF REPORT`
+         - Save it using:
+           ```
+           out_md = reports_dir / "integrity_checks_report.md"
+           with open(out_md, "w", encoding="utf-8") as f:
+               f.write(markdown_content)
+           ```
+
+    **Rules:**
+      - **When using the CodeInterpreterTool, always output a Python variable named `result` containing the final value or DataFrame; 
+      do not use/rely on only print statements.**
+      - If you use the CodeInterpreterTool more than once, **you must include `import pandas as pd` at the start of every code block**, 
+      because each tool call runs in a fresh environment and does not preserve previous imports or variables.
+      - When adding examples to the findings table, never insert raw dictionaries or lists of dictionaries directly into f-strings. Instead, 
+      summarize them (e.g., with a row count) or convert them to JSON-safe strings using json.dumps() or a similar method.
+      - Do not recommend final cleaning actions; only flag issues and propose candidate ideas.
+      - Do not skip any columns or errors.
+      - Do not actually alter or clean any data—only diagnose and recommend.
+      - Use Python/pandas code (with CodeInterpreterTool) for every finding.
+      - Do not make assumptions without evidence from data or column descriptions.
+      - If code that you are writing results in errors, find new ways to achieve the same result, don't keep on trying to run the same code.
+
+  expected_output: >
+    - "{reports_dir}/integrity_checks_table.csv": issue summary table with cleaning suggestions.
+    - "{reports_dir}/integrity_checks_report.md": clean markdown report describing all issues found, ending with "END OF REPORT".
+
+  agent: integrity_diagnostic_agent
+
+
+
+
+integrity_diagnostic_task_two:
+  description: >
+    Detect integrity issues in the dataset and document all findings using pandas and Python.
+
+    **Inputs:**
+      - The dataset: column names ({columns}) and sample rows ({sample_rows})
+      - The path to the full CSV file: {csv_file_path}
+      - The baseline profiling report, which is your primary reference for column types, flags, quick wins, and more. Please review it thoroughly before starting
+        your analysis, as it serves as the foundation for your work: {data_profiling_report}
+      - The absolute path to the reports directory, reports_dir = {reports_dir}
+
+    **Steps:**
+      0. In every CodeInterpreterTool block, start with this preamble to anchor paths and ensure the directory exists:
+         ```
+         import pandas as pd
+         from pathlib import Path
+         import os, json
+
+         reports_dir = Path("{reports_dir}")
+         reports_dir.mkdir(parents=True, exist_ok=True)
+         ```
+      1. Import pandas and load the CSV file at {csv_file_path} into a DataFrame called `df`.
+      2. Column-level type consistency:
+         - Flag columns where type or format appears to change (e.g., all numbers except a few text rows, or time-varying dtypes).
+      5. Structural & schema checks:
+         - Flag columns with non-standard or inconsistent naming (e.g., spaces, special characters, case inconsistencies).
+         - Compare current schema to expected/previous schema (if available).
+      6. Cross-field and multi-column validation:
+         - Identify suspicious or invalid combinations of values across columns (e.g., car with zero seats, negative age).
+         - Show up to 3 problematic row examples per flagged issue.
+      3. Create a summary table: "Issue | Column(s)/Row(s) | Example(s) | Cleaning Recommendation".
+      4. Save this table as CSV to:
+         ```
+         findings_df.to_csv(str(reports_dir / "integrity_checks_table_two.csv"), index=False)
+         ```
+      5. Create a clean markdown report including all diagnostics, apart from the summary table.
+         - Add: "A full issue summary table is saved to {reports_dir}/integrity_checks_table_two.csv."
+         - End with: `END OF REPORT`
+         - Save to:
+           ```
+           out_md = reports_dir / "integrity_checks_report_two.md"
+           with open(out_md, "w", encoding="utf-8") as f:
+               f.write(markdown_content)
+           ```
+
+    **Rules:**
+      - **When using the CodeInterpreterTool, always output a Python variable named `result` containing the final value or DataFrame; 
+      do not use/rely on only print statements.**
+      - If you use the CodeInterpreterTool more than once, **you must include `import pandas as pd` at the start of every code block**, 
+      because each tool call runs in a fresh environment and does not preserve previous imports or variables.
+      - When adding examples to the findings table, never insert raw dictionaries or lists of dictionaries directly into f-strings. Instead, 
+      summarize them (e.g., with a row count) or convert them to JSON-safe strings using json.dumps() or a similar method.
+      - Do not recommend final cleaning actions; only flag issues and propose candidate ideas.
+      - Do not skip any columns or errors.
+      - Do not actually alter or clean any data—only diagnose and recommend.
+      - Use Python/pandas code (with CodeInterpreterTool) for every finding.
+      - Do not make assumptions without evidence from data or column descriptions.
+      - If code that you are writing results in errors, find new ways to achieve the same result, don't keep on trying to run the same code.
+
+  expected_output: >
+    - "{reports_dir}/integrity_checks_table_two.csv": issue summary table with cleaning suggestions.
+    - "{reports_dir}/integrity_checks_report_two.md": clean markdown report describing all issues found, ending with "END OF REPORT".
+
+  agent: integrity_diagnostic_agent_two
+
+
+
+integrity_cleaning_planner_task:
+  description: >
+    Review the findings from the two integrity diagnostic agents and determine exactly what cleaning steps should be applied to the dataset.
+
+    **Inputs:**
+      - The dataset: column names ({columns}) and sample rows ({sample_rows})
+      - The path to the full CSV file: {csv_file_path}
+      - The baseline profiling report, which is your primary reference for column types, flags, quick wins, and more. Please review it thoroughly before starting
+        your analysis, as it serves as the foundation for your work: {data_profiling_report}
+      - The absolute path to the reports directory: {reports_dir}
+      - First integrity agent's findings table (CSV) absolute file path: {reports_dir}/integrity_checks_table.csv
+      - First integrity agent's diagnostics report (Markdown) absolute file path: {reports_dir}/integrity_checks_report.md
+      - Second integrity agent's findings table (CSV) absolute file path: {reports_dir}/integrity_checks_table_two.csv
+      - Second integrity agent's diagnostics report (Markdown) absolute file path: {reports_dir}/integrity_checks_report_two.md
+
+    **Steps:**
+      0. Load the findings from both integrity reports and both CSV files with findings tables, using the FileReadTool and the file paths provided.
+      1. Ensure **no issue is overlooked**—every row in both findings tables must be addressed.
+      2. For each flagged issue in both reports and both tables:
+         - Evaluate whether it requires cleaning.
+         - Justify why it should or should not be cleaned.
+         - Provide the exact cleaning step (e.g., drop duplicates, standardize column name).
+      3. Compile a clear cleaning plan as markdown:
+         - Table: "Issue | Column(s)/Row(s) | Recommended Cleaning Action | Justification"
+         - List of top-priority cleaning actions.
+         - Note any assumptions, ambiguities, or risks.
+         - Add a final sentence: "This plan is based strictly on the integrity findings."
+
+    **Rules:**
+      - Try to reason mostly based on provided findings, but if you need more information
+      than was provided, use the CodeInterpreterTool with python and pandas.
+      - **If you use the CodeInterpreterTool, always output a Python variable named `result` containing the final value or DataFrame; 
+      do not use/rely on only print statements.**
+      - If you use the CodeInterpreterTool more than once, **you must include `import pandas as pd` at the start of every code block**, 
+      because each tool call runs in a fresh environment and does not preserve previous imports or variables.
+      - When adding examples to the findings table, never insert raw dictionaries or lists of dictionaries directly into f-strings. Instead, 
+      summarize them (e.g., with a row count) or convert them to JSON-safe strings using json.dumps() or a similar method.
+      - Do not miss or ignore any issue from the findings table.
+      - You may suggest alternate actions but must reference the findings.
+      - Your output must be markdown-ready and actionable by a cleaning agent. The cleaning agent
+      will then use the plan directly to clean the dataset.
+
+  expected_output: >
+    - A markdown cleaning plan including:
+        - Evaluation and decision for every flagged integrity issue
+        - Actionable recommendations and justifications
+        - Prioritized cleaning steps
+
+  agent: integrity_cleaning_planner_agent

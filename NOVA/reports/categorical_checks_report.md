@@ -1,0 +1,92 @@
+
+# Categorical Data Quality Report
+
+This report details findings from a deep-dive analysis of categorical, text, and date columns in the dataset.
+
+## Summary of Findings
+
+### Rare Categories
+
+- **Column(s)/Row(s)**: brand
+  **Example(s)**: Examples: ["Abarth", "Lexus", "Maserati"] (frequencies: {"Abarth": 0.008368200836820083, "Lexus": 0.006276150627615063, "Maserati": 0.006276150627615063})
+  **Cleaning Recommendation**: Investigate rare categories in brand for potential typos or grouping opportunities.
+
+- **Column(s)/Row(s)**: model
+  **Example(s)**: Examples: ["500e Convertible", "500e Hatchback", "600e Scorpionissima"] (frequencies: {"500e Convertible": 0.0020964360587002098, "500e Hatchback": 0.0020964360587002098, "600e Scorpionissima": 0.0020964360587002098})
+  **Cleaning Recommendation**: Investigate rare categories in model for potential typos or grouping opportunities.
+
+- **Column(s)/Row(s)**: fast_charge_port
+  **Example(s)**: Examples: ["CHAdeMO"] (frequencies: {"CHAdeMO": 0.0020964360587002098})
+  **Cleaning Recommendation**: Investigate rare categories in fast_charge_port for potential typos or grouping opportunities.
+
+- **Column(s)/Row(s)**: cargo_volume_l
+  **Example(s)**: Examples: ["594", "526", "511"] (frequencies: {"594": 0.008385744234800839, "526": 0.008385744234800839, "511": 0.008385744234800839})
+  **Cleaning Recommendation**: Investigate rare categories in cargo_volume_l for potential typos or grouping opportunities.
+
+- **Column(s)/Row(s)**: segment
+  **Example(s)**: Examples: ["A - Mini", "JA - Mini", "G - Sports"] (frequencies: {"A - Mini": 0.006276150627615063, "JA - Mini": 0.0041841004184100415, "G - Sports": 0.0041841004184100415})
+  **Cleaning Recommendation**: Investigate rare categories in segment for potential typos or grouping opportunities.
+
+- **Column(s)/Row(s)**: car_body_type
+  **Example(s)**: Examples: ["Coupe"] (frequencies: {"Coupe": 0.0041841004184100415})
+  **Cleaning Recommendation**: Investigate rare categories in car_body_type for potential typos or grouping opportunities.
+
+- **Column(s)/Row(s)**: source_url
+  **Example(s)**: Examples: ["https://ev-database.org/car/1904/Abarth-500e-Convertible", "https://ev-database.org/car/1903/Abarth-500e-Hatchback", "https://ev-database.org/car/3057/Abarth-600e-Scorpionissima"] (frequencies: {"https://ev-database.org/car/1904/Abarth-500e-Convertible": 0.0020920502092050207, "https://ev-database.org/car/1903/Abarth-500e-Hatchback": 0.0020920502092050207, "https://ev-database.org/car/3057/Abarth-600e-Scorpionissima": 0.0020920502092050207})
+  **Cleaning Recommendation**: Investigate rare categories in source_url for potential typos or grouping opportunities.
+
+### Singleton Categories
+
+- **Column(s)/Row(s)**: brand
+  **Example(s)**: Examples: ["KGM", "Elaris", "Cadillac"]
+  **Cleaning Recommendation**: Investigate singleton categories in brand for potential typos or grouping opportunities.
+
+- **Column(s)/Row(s)**: model
+  **Example(s)**: Examples: ["500e Convertible", "500e Hatchback", "600e Scorpionissima"]
+  **Cleaning Recommendation**: Investigate singleton categories in model for potential typos or grouping opportunities.
+
+- **Column(s)/Row(s)**: fast_charge_port
+  **Example(s)**: Examples: ["CHAdeMO"]
+  **Cleaning Recommendation**: Investigate singleton categories in fast_charge_port for potential typos or grouping opportunities.
+
+- **Column(s)/Row(s)**: cargo_volume_l
+  **Example(s)**: Examples: ["496", "10 Banana Boxes", "472"]
+  **Cleaning Recommendation**: Investigate singleton categories in cargo_volume_l for potential typos or grouping opportunities.
+
+- **Column(s)/Row(s)**: segment
+  **Example(s)**: Examples: ["I - Luxury"]
+  **Cleaning Recommendation**: Investigate singleton categories in segment for potential typos or grouping opportunities.
+
+- **Column(s)/Row(s)**: source_url
+  **Example(s)**: Examples: ["https://ev-database.org/car/1904/Abarth-500e-Convertible", "https://ev-database.org/car/1903/Abarth-500e-Hatchback", "https://ev-database.org/car/3057/Abarth-600e-Scorpionissima"]
+  **Cleaning Recommendation**: Investigate singleton categories in source_url for potential typos or grouping opportunities.
+
+### Mixed Data Types
+
+- **Column(s)/Row(s)**: model
+  **Example(s)**: Types present: {"<class 'str'>": 477, "<class 'float'>": 1}
+  **Cleaning Recommendation**: Ensure all values in model are of a consistent type (e.g., string). Handle NaN values appropriately.
+
+- **Column(s)/Row(s)**: fast_charge_port
+  **Example(s)**: Types present: {"<class 'str'>": 477, "<class 'float'>": 1}
+  **Cleaning Recommendation**: Ensure all values in fast_charge_port are of a consistent type (e.g., string). Handle NaN values appropriately.
+
+- **Column(s)/Row(s)**: cargo_volume_l
+  **Example(s)**: Types present: {"<class 'str'>": 477, "<class 'float'>": 1}
+  **Cleaning Recommendation**: Ensure all values in cargo_volume_l are of a consistent type (e.g., string). Handle NaN values appropriately.
+
+### Non-numeric strings in numeric-intended column
+
+- **Column(s)/Row(s)**: cargo_volume_l
+  **Example(s)**: Examples: ["10 Banana Boxes", "31 Banana Boxes", "13 Banana Boxes"]
+  **Cleaning Recommendation**: Extract numeric values from cargo_volume_l and convert to numeric type. Handle non-numeric entries appropriately.
+
+### Constant Column
+
+- **Column(s)/Row(s)**: battery_type
+  **Example(s)**: Only one unique value: Lithium-ion
+  **Cleaning Recommendation**: Consider dropping battery_type as it provides no discriminatory information.
+
+A full issue summary table is saved to reports/categorical_checks_table.csv.
+
+END OF REPORT

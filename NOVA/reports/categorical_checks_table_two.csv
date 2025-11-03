@@ -1,0 +1,5 @@
+Issue,Column(s)/Row(s),Example(s),Cleaning Recommendation
+High Cardinality,model,"[""001 Long Range RWD"", ""SQ6 e-tron Sportback"", ""e-Tourneo Custom L2 160 kW""]",Consider if this column is suitable for direct categorical encoding or if it serves as an identifier. May require feature engineering or removal.
+Non-informative (Constant) Column,battery_type,"""Lithium-ion""",Consider removing this column as it provides no discriminatory information.
+Non-numeric Text Values,cargo_volume_l,"[""10 Banana Boxes"", ""31 Banana Boxes"", ""13 Banana Boxes""]","Extract numeric values from strings. Non-numeric parts (e.g., ""Banana Boxes"") should be removed or mapped to a specific category/value if meaningful."
+High Cardinality,source_url,"[""https://ev-database.org/car/1934/Zeekr-001-Performance-AWD"", ""https://ev-database.org/car/3044/Audi-SQ6-e-tron-Sportback"", ""https://ev-database.org/car/3164/Ford-e-Tourneo-Custom-L2-160-kW""]",Consider if this column is suitable for direct categorical encoding or if it serves as an identifier. May require feature engineering or removal.

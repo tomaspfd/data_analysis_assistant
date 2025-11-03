@@ -1,0 +1,31 @@
+# --- Secrets / environment files (private) ---
+.env
+.env.*
+*.env
+# Streamlit secrets 
+.streamlit/secrets.toml
+# Generic secret files 
+secrets.*
+*.secret
+
+# --- Python cache / build noise ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+
+# --- Virtual environments & local tooling ---
+.venv/
+venv/
+.python-version
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+agentops.log

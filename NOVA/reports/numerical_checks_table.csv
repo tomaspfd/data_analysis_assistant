@@ -1,0 +1,7 @@
+Issue,Column(s)/Row(s),Example(s),Cleaning Recommendation
+Missing Values,number_of_cells,202 missing values,"Impute missing values using an appropriate strategy (e.g., mean, median, mode, or model-based imputation)."
+Missing Values,torque_nm,7 missing values,"Impute missing values using an appropriate strategy (e.g., mean, median, mode, or model-based imputation)."
+Missing Values,fast_charging_power_kw_dc,1 missing values,"Impute missing values using an appropriate strategy (e.g., mean, median, mode, or model-based imputation)."
+Missing Values,towing_capacity_kg,26 missing values,"Impute missing values using an appropriate strategy (e.g., mean, median, mode, or model-based imputation)."
+Data Type Mismatch (non-numeric strings),cargo_volume_l,"Examples: 10 Banana Boxes, 31 Banana Boxes, 13 Banana Boxes","Convert column to numeric, handling non-numeric strings by extracting numbers or setting to NaN. Then, impute missing values."
+Missing Values,cargo_volume_l,4 missing values,"Impute missing values using an appropriate strategy (e.g., mean, median, mode, or model-based imputation)."

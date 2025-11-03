@@ -1,0 +1,15 @@
+Issue,Column(s)/Row(s),Example(s),Cleaning Recommendation
+Missing Values,number_of_cells,"202 missing values, 42.26% of total.","Consider imputation based on data type and distribution. For categorical columns, consider a 'Missing' category."
+Missing Values,towing_capacity_kg,"26 missing values, 5.44% of total.","Consider imputation based on data type and distribution. For categorical columns, consider a 'Missing' category."
+Missing Values,torque_nm,"7 missing values, 1.46% of total.","Consider imputation based on data type and distribution. For categorical columns, consider a 'Missing' category."
+Missing Values,fast_charging_power_kw_dc,"1 missing values, 0.21% of total.","Consider imputation based on data type and distribution. For categorical columns, consider a 'Missing' category."
+Missing Values,fast_charge_port,"1 missing values, 0.21% of total.","Consider imputation based on data type and distribution. For categorical columns, consider a 'Missing' category."
+Missing Values,model,"1 missing values, 0.21% of total.","Consider imputation based on data type and distribution. For categorical columns, consider a 'Missing' category."
+Missing Values,cargo_volume_l,"1 missing values, 0.21% of total.","Consider imputation based on data type and distribution. For categorical columns, consider a 'Missing' category."
+Constant Column,battery_type,Only one unique value: 'Lithium-ion'.,Consider dropping this column as it provides no discriminatory information.
+Rows with Multiple Missing Values,Multiple columns,"Found 25 rows with multiple missing values. Example: {""brand"": ""Aiways"", ""model"": ""U5"", ""top_speed_kmh"": 150, ""battery_capacity_kWh"": 60.0, ""battery_type"": ""Lithium-ion"", ""number_of_cells"": NaN, ""torque_nm"": 310.0, ""efficiency_wh_per_km"": 156, ""range_km"": 315, ""acceleration_0_100_s"": 7.5, ""fast_charging_power_kw_dc"": 78.0, ""fast_charge_port"": ""CCS"", ""towing_capacity_kg"": NaN, ""cargo_volume_l"": ""496"", ""seats"": 5, ""drivetrain"": ""FWD"", ""segment"": ""JC - Medium"", ""length_mm"": 4680, ""width_mm"": 1865, ""height_mm"": 1700, ""car_body_type"": ""SUV"", ""source_url"": ""https://ev-database.org/car/1678/Aiways-U5""}",Investigate if these rows represent incomplete entries or specific data collection issues. Decide on imputation or removal based on the extent of missingness.
+Candidate Primary Key,source_url,All 478 values are unique.,"None, this column is suitable as a unique identifier."
+Candidate Composite Primary Key,"brand, model",All 478 combinations are unique.,"None, this combination is suitable as a unique identifier."
+Data Type/Format Mismatch,cargo_volume_l,Non-numeric values like '10 Banana Boxes' found.,"Extract numerical values, handle non-numeric entries, and convert to a numeric type. Then impute missing values."
+Data Type Inconsistency (NaN as float),model,NaN values are represented as float.,Convert column to string type after handling NaNs if pure string type is desired.
+Data Type Inconsistency (NaN as float),fast_charge_port,NaN values are represented as float.,Convert column to string type after handling NaNs if pure string type is desired.
